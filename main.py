@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 
 # Erstellt Datenbank
@@ -11,6 +12,7 @@ def setup_database():
         CREATE TABLE IF NOT EXISTS eintraege (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             entry_type TEXT NOT NULL,
+            category TEXT NOT NULL,
             date TEXT NOT NULL,
             description TEXT NOT NULL,
             amount REAL NOT NULL
@@ -20,7 +22,7 @@ def setup_database():
     connection.commit()
     connection.close()
 
-# Eintträge hinzufügen
+# Einträge hinzufügen
 
 def add_entry():
     print("\n-Neuer Eintrag-")
@@ -33,7 +35,39 @@ def add_entry():
         print("Ungültige Eingabe!")
         return
     
-    date = input("Datum: ")
+    print("\nKategorie")
+    print("1 - Miete")
+    print("2 - Lebensmittel")
+    print("3 - Transport")
+    print("4 - Freizeit")
+    print("5 - Gehalt")
+    print("6 - Sonstige")
+    category = input("Kategorie wählen: ")
+    if category == "1":
+        category = "Miete"
+    elif category == "2":
+        category = "Lebensmittel"
+    elif category == "3":
+        category = "Transport"
+    elif category == "4":
+        category = "Freizeit"
+    elif category == "5":
+        category = "Gehalt"
+    elif category == "6":
+        category = "Sonstiges"
+    else:
+        print("Ungültige Eingabe")
+        return
+
+    date = input("Datum (YYYY-MM-DD): ")
+    while True:
+        date = input("Datum (YYYY-MM-DD): ")
+        try:
+            datetime.strptime(date,"%Y-%m-%d")
+            break
+        except ValueError:
+            print("Falsches Format: YYYY-MM-DD verwenden.")
+
     description = input("Beschreibung: ")
     amount = float(input("Betrag in Euro "))
 
@@ -41,9 +75,9 @@ def add_entry():
     cursor = connection.cursor()
 
     cursor.execute("""
-                   INSERT INTO eintraege (entry_type, date, description, amount)
-                   VALUES (?, ?, ?, ?)
-                   """, (entry_type, date, description, amount))
+                   INSERT INTO eintraege (entry_type, category, date, description, amount)
+                   VALUES (?, ?, ?, ?, ?)
+                   """, (entry_type, category, date, description, amount))
 
     connection.commit()
     connection.close()
@@ -78,13 +112,41 @@ def main ():
 # Zeigt Gesamtübersicht und Endsumme
 
 def show_overview():
+    print("\n- Übersicht -")
+    print("1 - Alle Einträge anzeigen")
+    print("2 - Nach Monat filtern")
+    print("3 - Nach Jahr filtern")
+    choice = input("Deine Wahl: ")
+
     connection = sqlite3.connect("haushaltsbuch.db")
     cursor = connection.cursor()
 
-    cursor.execute("SELECT id, entry_type, date, description, amount FROM eintraege")
-    entries = cursor.fetchall()
+    if choice == "1":
+        cursor.execute("SELECT id, entry_type, category, date, description, amount FROM eintraege")
+    elif choice == "2":
+        while True:
+            monat = input("Monat eingeben (YYYY-MM): ")
+            try:
+                datetime.strptime(monat, "%Y-%m")
+                break
+            except ValueError:
+                print("Falsches Format: YYYY-MM verwenden.")
+        cursor.execute("SELECT id, entry_type, category, date, description, amount FROM eintraege WHERE date LIKE ?", (monat + "%",))
+    elif choice == "3":
+        while True:
+            jahr = input("Jahr eingeben: ")
+            try:
+                datetime.strptime(jahr, "%Y")
+                break
+            except ValueError:
+                print("Falsches Format: YYYY verwenden.")
+        cursor.execute("SELECT id, entry_type, category, date, description, amount FROM eintraege WHERE date LIKE ?", (jahr + "%",))
+    else:
+        print("Ungültige Eingabe")
+        connection.close()
+        return 
 
-    connection.close()
+    entries = cursor.fetchall()
 
     if len(entries) == 0:
         print("\n Keine Einträge vorhanden.")
@@ -96,16 +158,17 @@ def show_overview():
     for entry in entries:
         entry_id = entry[0]
         entry_type = entry[1]
-        date = entry[2]
-        description = entry[3]
-        amount = entry[4]
+        category = entry[2]
+        date = entry[3]
+        description = entry[4]
+        amount = entry[5]
 
         if entry_type == "Einnahme":
             total += amount
         else:
             total -= amount
 
-        print(str(entry_id) + " ! " + entry_type + " ! " + date + " ! " + description + " ! " + str(amount) + " €")
+        print(str(entry_id) + " ! " + entry_type + " ! " + category + " ! " + date + " ! " + description + " ! " + str(amount) + " €")
     
     print("\nKontostand: " + str(total) + " €")
 
