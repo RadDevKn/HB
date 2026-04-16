@@ -111,7 +111,7 @@ def main ():
         else:
             print("Ungültige Eingabe, bitte 1, 2, 3 oder 4 wählen")
 
-# Zeigt Gesamtübersicht und Endsumme
+# Zeigt Gesamtübersicht und Endsumme, Monats und Jahresfilter
 
 def show_overview():
     print("\n- Übersicht -")
@@ -152,6 +152,7 @@ def show_overview():
 
     if len(entries) == 0:
         print("\n Keine Einträge vorhanden.")
+        connection.close()
         return
     
     print("\n-Übersicht-")
@@ -173,6 +174,8 @@ def show_overview():
         print(str(entry_id) + " ! " + entry_type + " ! " + category + " ! " + date + " ! " + description + " ! " + str(amount) + " €")
     
     print("\nKontostand: " + str(total) + " €")
+
+#Zeigt höchste und durchschnittliche Ausgabe und Einnahme
 
 def show_statistics():
     connection = sqlite3.connect("haushaltsbuch.db")
