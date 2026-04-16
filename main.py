@@ -59,7 +59,6 @@ def add_entry():
         print("Ungültige Eingabe")
         return
 
-    date = input("Datum (YYYY-MM-DD): ")
     while True:
         date = input("Datum (YYYY-MM-DD): ")
         try:
@@ -95,7 +94,8 @@ def main ():
     while True:
         print("\n1 - Eintrag hinzufügen")
         print("2 - Übersicht anzeigen")
-        print("3 - Beenden")
+        print("3 - Auswertung anzeigen")
+        print("4 - Beenden")
 
         choice = input("Deine Wahl: ")
 
@@ -104,10 +104,12 @@ def main ():
         elif choice == "2":
             show_overview()
         elif choice == "3":
+            show_statistics()
+        elif choice == "4":
             print("Beendet")
             break
         else:
-            print("Ungültige Eingabe, bitte 1, 2 oder 3 wählen")
+            print("Ungültige Eingabe, bitte 1, 2, 3 oder 4 wählen")
 
 # Zeigt Gesamtübersicht und Endsumme
 
@@ -171,6 +173,25 @@ def show_overview():
         print(str(entry_id) + " ! " + entry_type + " ! " + category + " ! " + date + " ! " + description + " ! " + str(amount) + " €")
     
     print("\nKontostand: " + str(total) + " €")
+
+def show_statistics():
+    connection = sqlite3.connect("haushaltsbuch.db")
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT MAX(amount), AVG(amount) FROM eintraege WHERE entry_type = ?", ("Ausgabe",))
+    result = cursor.fetchone()
+
+    print("\n-Auswertung-")
+    print("Höchste Ausgabe: " + str(result[0]) + " €")
+    print("Durchschnitt Ausgaben: " + str(result[1]) + " €")
+
+    cursor.execute("SELECT MAX(amount), AVG(amount) FROM eintraege WHERE entry_type = ?", ("Einnahme",))
+    result = cursor.fetchone()
+
+    connection.close()
+
+    print("Höchste Einnahme: " + str(result[0]) + " €")
+    print("Durchschnitt Einnahme: " + str(result[1]) + " €")
 
 
 main()
